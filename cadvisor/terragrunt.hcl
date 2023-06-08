@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "${get_path_to_repo_root()}//application"
+  source = "${get_path_to_repo_root()}//base"
 }
 
 dependencies {
@@ -19,22 +19,17 @@ dependency "traefik" {
 }
 
 locals {
-  service_name            = "gocd"
-  docker_volume_gocd_home = "gocd_home"
-  docker_volume_gocd_data = "gocd_data"
+  service_name                = "cadvisor"
+  docker_volume_cadvisor_data = "cadvisor_data"
 }
 
 inputs = {
-  docker_image              = "gocd/gocd-server:v23.1.0"
+  docker_image              = "gcr.io/cadvisor/cadvisor:v0.47.0"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "${local.docker_volume_gocd_home}"
-      driver = "local"
-    },
-    {
-      name   = "${local.docker_volume_gocd_data}"
+      name   = "${local.docker_volume_cadvisor_data}"
       driver = "local"
     }
   ]
@@ -45,19 +40,19 @@ inputs = {
     },
     {
       label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "8153"
+      value = "8080"
     }
   ]
   mounts = [
     {
-      source    = "${local.docker_volume_gocd_home}"
-      target    = "/home/go"
-      type      = "volume"
-      read_only = false
+      source    = "/var/run/docker.sock"
+      target    = "/var/run/docker.sock"
+      type      = "bind"
+      read_only = true
     },
     {
-      source    = "${local.docker_volume_gocd_data}"
-      target    = "/godata"
+      source    = "${local.docker_volume_cadvisor_data}"
+      target    = "/data"
       type      = "volume"
       read_only = false
     }

@@ -19,17 +19,20 @@ dependency "traefik" {
 }
 
 locals {
-  service_name                 = "portainer"
-  docker_volume_portainer_data = "portainer_data"
+  service_name                  = "prometheus"
+  docker_volume_prometheus_data = "prometheus_data"
+  docker_network_name           = "moniroting"
 }
 
 inputs = {
-  docker_image              = "portainer/portainer-ce:latest"
+  docker_network_name       = "${local.docker_network_name}"
+  docker_network_driver     = "bridge"
+  docker_image              = "prom/prometheus:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "${local.docker_volume_portainer_data}"
+      name   = "${local.docker_volume_prometheus_data}"
       driver = "local"
     }
   ]
@@ -40,19 +43,19 @@ inputs = {
     },
     {
       label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "9000"
+      value = "9090"
     }
   ]
   mounts = [
     {
-      source    = "/var/run/docker.sock"
-      target    = "/var/run/docker.sock"
+      source    = "/etc/prometheus"
+      target    = "/etc/prometheus"
       type      = "bind"
       read_only = true
     },
     {
-      source    = "${local.docker_volume_portainer_data}"
-      target    = "/data"
+      source    = "${local.docker_volume_prometheus_data}"
+      target    = "/prometheus"
       type      = "volume"
       read_only = false
     }
@@ -60,7 +63,14 @@ inputs = {
   networks_advanced = [
     {
       name = dependency.traefik.outputs.docker_network_id
+    },
+    {
+      name = "${local.docker_network_name}"
     }
   ]
   remove_container_after_destroy = true
+
+  command = [
+    "--config.file=/etc/prometheus/prometheus.yaml"
+  ]
 }
