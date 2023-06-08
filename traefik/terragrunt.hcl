@@ -3,7 +3,7 @@ include "root" {
 }
 
 terraform {
-  source = "..//application"
+  source = "${get_path_to_repo_root()}//application"
 }
 
 locals {
@@ -54,7 +54,7 @@ inputs = {
   env = ["TZ=Europe/Lison"]
   networks_advanced = [
     {
-      name = "${local.docker_network}"
+      name = "${local.docker_network_name}"
     }
   ]
 }

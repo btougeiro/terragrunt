@@ -3,15 +3,15 @@ include "root" {
 }
 
 terraform {
-  source = "..//application"
+  source = "${get_path_to_repo_root()}//application"
 }
 
 dependencies {
-  paths = ["../traefik"]
+  paths = ["${get_path_to_repo_root()}/traefik"]
 }
 
 dependency "traefik" {
-  config_path = "../traefik"
+  config_path = "${get_path_to_repo_root()}/traefik"
 
   mock_outputs = {
     docker_network_id = "fake-network"
