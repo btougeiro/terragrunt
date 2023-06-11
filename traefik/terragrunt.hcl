@@ -11,6 +11,8 @@ locals {
   docker_network_name = "reverse-proxy"
 }
 
+// This service internally exposes port 80/tcp
+
 inputs = {
   docker_network_name       = "${local.docker_network_name}"
   docker_network_driver     = "bridge"

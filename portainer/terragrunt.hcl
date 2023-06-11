@@ -19,9 +19,10 @@ dependency "traefik" {
 }
 
 locals {
-  service_name                 = "portainer"
-  docker_volume_portainer_data = "portainer_data"
+  service_name = "portainer"
 }
+
+// This service internally exposes ports 8000/tcp, 9000/tcp, 9443/tcp
 
 inputs = {
   docker_image              = "portainer/portainer-ce:latest"
@@ -29,7 +30,7 @@ inputs = {
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "${local.docker_volume_portainer_data}"
+      name   = "portainer_data"
       driver = "local"
     }
   ]
@@ -51,7 +52,7 @@ inputs = {
       read_only = true
     },
     {
-      source    = "${local.docker_volume_portainer_data}"
+      source    = "portainer_data"
       target    = "/data"
       type      = "volume"
       read_only = false

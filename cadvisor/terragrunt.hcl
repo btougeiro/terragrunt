@@ -7,11 +7,11 @@ terraform {
 }
 
 dependencies {
-  paths = ["${get_path_to_repo_root()}/traefik"]
+  paths = ["${get_path_to_repo_root()}/prometheus"]
 }
 
-dependency "traefik" {
-  config_path = "${get_path_to_repo_root()}/traefik"
+dependency "prometheus" {
+  config_path = "${get_path_to_repo_root()}/prometheus"
 
   mock_outputs = {
     docker_network_id = "fake-network"
@@ -19,47 +19,44 @@ dependency "traefik" {
 }
 
 locals {
-  service_name                = "cadvisor"
-  docker_volume_cadvisor_data = "cadvisor_data"
+  service_name = "cadvisor"
 }
 
+// This service internally exposes port 8080/tcp
+
 inputs = {
-  docker_image              = "gcr.io/cadvisor/cadvisor:v0.47.0"
+  docker_image              = "gcr.io/cadvisor/cadvisor:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
-  docker_volume = [
-    {
-      name   = "${local.docker_volume_cadvisor_data}"
-      driver = "local"
-    }
-  ]
-  labels = [
-    {
-      label = "traefik.http.routers.${local.service_name}.rule"
-      value = "Host(`${local.service_name}.docker.localhost`)"
-    },
-    {
-      label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "8080"
-    }
-  ]
   mounts = [
     {
-      source    = "/var/run/docker.sock"
-      target    = "/var/run/docker.sock"
+      source    = "/"
+      target    = "/rootfs"
       type      = "bind"
       read_only = true
     },
     {
-      source    = "${local.docker_volume_cadvisor_data}"
-      target    = "/data"
-      type      = "volume"
+      source    = "/var/run"
+      target    = "/var/run"
+      type      = "bind"
       read_only = false
+    },
+    {
+      source    = "/sys"
+      target    = "/sys"
+      type      = "bind"
+      read_only = true
+    },
+    {
+      source    = "/var/lib/docker/"
+      target    = "/var/lib/docker"
+      type      = "bind"
+      read_only = true
     }
   ]
   networks_advanced = [
     {
-      name = dependency.traefik.outputs.docker_network_id
+      name = dependency.prometheus.outputs.docker_network_id
     }
   ]
   remove_container_after_destroy = true

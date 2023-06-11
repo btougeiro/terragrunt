@@ -7,7 +7,10 @@ terraform {
 }
 
 dependencies {
-  paths = ["${get_path_to_repo_root()}/traefik"]
+  paths = [
+    "${get_path_to_repo_root()}/traefik",
+    "${get_path_to_repo_root()}/prometheus"
+  ]
 }
 
 dependency "traefik" {
@@ -18,18 +21,31 @@ dependency "traefik" {
   }
 }
 
+dependency "prometheus" {
+  config_path = "${get_path_to_repo_root()}/prometheus"
+
+  mock_outputs = {
+    docker_network_id = "fake-network"
+  }
+}
+
+// This service internally exposes port 3000/tcp
+
 locals {
-  service_name                 = "portainer"
-  docker_volume_portainer_data = "portainer_data"
+  service_name = "grafana"
 }
 
 inputs = {
-  docker_image              = "portainer/portainer-ce:latest"
+  docker_image              = "grafana/grafana:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "${local.docker_volume_portainer_data}"
+      name   = "grafana_provisioning_datasources"
+      driver = "local"
+    },
+    {
+      name   = "var_lib_grafana"
       driver = "local"
     }
   ]
@@ -40,19 +56,19 @@ inputs = {
     },
     {
       label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "9000"
+      value = "3000"
     }
   ]
   mounts = [
     {
-      source    = "/var/run/docker.sock"
-      target    = "/var/run/docker.sock"
-      type      = "bind"
-      read_only = true
+      source    = "grafana_provisioning_datasources"
+      target    = "/etc/grafana/provisioning/datasources"
+      type      = "volume"
+      read_only = false
     },
     {
-      source    = "${local.docker_volume_portainer_data}"
-      target    = "/data"
+      source    = "var_lib_grafana"
+      target    = "/var/lib/grafana"
       type      = "volume"
       read_only = false
     }
@@ -60,6 +76,9 @@ inputs = {
   networks_advanced = [
     {
       name = dependency.traefik.outputs.docker_network_id
+    },
+    {
+      name = dependency.prometheus.outputs.docker_network_id
     }
   ]
   remove_container_after_destroy = true

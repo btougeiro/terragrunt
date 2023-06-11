@@ -20,9 +20,10 @@ dependency "traefik" {
 
 locals {
   service_name                  = "prometheus"
-  docker_volume_prometheus_data = "prometheus_data"
-  docker_network_name           = "moniroting"
+  docker_network_name           = "monitoring"
 }
+
+// This service internally exposes port 9090/tcp
 
 inputs = {
   docker_network_name       = "${local.docker_network_name}"
@@ -32,7 +33,7 @@ inputs = {
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "${local.docker_volume_prometheus_data}"
+      name   = "prometheus_data"
       driver = "local"
     }
   ]
@@ -48,13 +49,13 @@ inputs = {
   ]
   mounts = [
     {
-      source    = "/etc/prometheus"
+      source    = "/home/vagrant/projects/btougeiro/terragrunt-docker/prometheus/config"
       target    = "/etc/prometheus"
       type      = "bind"
-      read_only = true
+      read_only = false
     },
     {
-      source    = "${local.docker_volume_prometheus_data}"
+      source    = "prometheus_data"
       target    = "/prometheus"
       type      = "volume"
       read_only = false
@@ -71,6 +72,10 @@ inputs = {
   remove_container_after_destroy = true
 
   command = [
-    "--config.file=/etc/prometheus/prometheus.yaml"
+    "--config.file=/etc/prometheus/prometheus.yaml",
+    "--storage.tsdb.path=/prometheus",
+    "--web.console.libraries=/etc/prometheus/console_libraries",
+    "--web.console.templates=/etc/prometheus/consoles",
+    "--web.enable-lifecycle"
   ]
 }

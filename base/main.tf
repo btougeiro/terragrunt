@@ -63,5 +63,5 @@ resource "docker_container" "this" {
 
   rm = var.remove_container_after_destroy
 
-  depends_on = [ docker_image.this, docker_network.this, docker_volume.this ]
+  depends_on = [docker_image.this, docker_network.this, docker_volume.this]
 }
