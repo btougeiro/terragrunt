@@ -48,8 +48,14 @@ inputs = {
       read_only = true
     },
     {
-      source    = "/var/lib/docker/"
+      source    = "/var/lib/docker"
       target    = "/var/lib/docker"
+      type      = "bind"
+      read_only = true
+    },
+    {
+      source    = "/dev/disk"
+      target    = "/dev/disk"
       type      = "bind"
       read_only = true
     }
