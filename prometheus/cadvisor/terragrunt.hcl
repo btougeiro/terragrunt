@@ -7,11 +7,11 @@ terraform {
 }
 
 dependencies {
-  paths = ["${get_path_to_repo_root()}/prometheus"]
+  paths = ["${get_path_to_repo_root()}/prometheus/prometheus"]
 }
 
 dependency "prometheus" {
-  config_path = "${get_path_to_repo_root()}/prometheus"
+  config_path = "${get_path_to_repo_root()}/prometheus/prometheus"
 
   mock_outputs = {
     docker_network_id = "fake-network"
@@ -19,40 +19,46 @@ dependency "prometheus" {
 }
 
 locals {
-  service_name = "node-exporter"
+  service_name = "cadvisor"
 }
 
-// This service internally exposes port 9100/tcp
+// This service internally exposes port 8080/tcp
 
 inputs = {
-  docker_image              = "prom/node-exporter:latest"
+  docker_image              = "gcr.io/cadvisor/cadvisor:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   mounts = [
-    {
-      source    = "/proc"
-      target    = "/host/proc"
-      type      = "bind"
-      read_only = true
-    },
-    {
-      source    = "/sys"
-      target    = "/host/sys"
-      type      = "bind"
-      read_only = true
-    },
     {
       source    = "/"
       target    = "/rootfs"
       type      = "bind"
       read_only = true
+    },
+    {
+      source    = "/var/run"
+      target    = "/var/run"
+      type      = "bind"
+      read_only = false
+    },
+    {
+      source    = "/sys"
+      target    = "/sys"
+      type      = "bind"
+      read_only = true
+    },
+    {
+      source    = "/var/lib/docker"
+      target    = "/var/lib/docker"
+      type      = "bind"
+      read_only = true
+    },
+    {
+      source    = "/dev/disk"
+      target    = "/dev/disk"
+      type      = "bind"
+      read_only = true
     }
-  ]
-  command = [
-    "--path.procfs=/host/proc",
-    "--path.rootfs=/rootfs",
-    "--path.sysfs=/host/sys",
-    "--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)"
   ]
   networks_advanced = [
     {

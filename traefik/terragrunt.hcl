@@ -8,7 +8,7 @@ terraform {
 
 locals {
   service_name        = "traefik"
-  docker_network_name = "reverse-proxy"
+  docker_network_name = "traefik"
 }
 
 // This service internally exposes port 80/tcp
@@ -16,7 +16,7 @@ locals {
 inputs = {
   docker_network_name       = "${local.docker_network_name}"
   docker_network_driver     = "bridge"
-  docker_image              = "traefik:v2.10"
+  docker_image              = "traefik:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   labels = [

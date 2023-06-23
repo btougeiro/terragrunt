@@ -19,18 +19,21 @@ dependency "traefik" {
 }
 
 locals {
-  service_name = "portainer"
+  service_name        = "prometheus"
+  docker_network_name = "prometheus"
 }
 
-// This service internally exposes ports 8000/tcp, 9000/tcp, 9443/tcp
+// This service internally exposes port 9090/tcp
 
 inputs = {
-  docker_image              = "portainer/portainer-ce:latest"
+  docker_network_name       = "${local.docker_network_name}"
+  docker_network_driver     = "bridge"
+  docker_image              = "prom/prometheus:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "portainer_data"
+      name   = "prometheus_data"
       driver = "local"
     }
   ]
@@ -41,19 +44,19 @@ inputs = {
     },
     {
       label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "9000"
+      value = "9090"
     }
   ]
   mounts = [
     {
-      source    = "/var/run/docker.sock"
-      target    = "/var/run/docker.sock"
+      source    = "/com.docker.devenvironments.code/projects/terragrunt-docker/prometheus/prometheus/config"
+      target    = "/etc/prometheus"
       type      = "bind"
-      read_only = true
+      read_only = false
     },
     {
-      source    = "portainer_data"
-      target    = "/data"
+      source    = "prometheus_data"
+      target    = "/prometheus"
       type      = "volume"
       read_only = false
     }
@@ -61,7 +64,18 @@ inputs = {
   networks_advanced = [
     {
       name = dependency.traefik.outputs.docker_network_id
+    },
+    {
+      name = "${local.docker_network_name}"
     }
   ]
   remove_container_after_destroy = true
+
+  command = [
+    "--config.file=/etc/prometheus/prometheus.yaml",
+    "--storage.tsdb.path=/prometheus",
+    "--web.console.libraries=/etc/prometheus/console_libraries",
+    "--web.console.templates=/etc/prometheus/consoles",
+    "--web.enable-lifecycle"
+  ]
 }

@@ -19,7 +19,7 @@ scrape_configs:
         - 'prometheus:9090'
 
   # Example job for node_exporter (get metrics from Linux OS)
-  - job_name: 'linux_exporter'
+  - job_name: 'node_exporter'
     static_configs:
       - targets:
         - 'node-exporter:9100'
@@ -29,9 +29,3 @@ scrape_configs:
     static_configs:
       - targets:
         - 'cadvisor:8080'
-
-  # Example job for windows_exporter (get metrics from Windows OS)
-  - job_name: 'windows_exporter'
-    static_configs:
-      - targets:
-          - "windows-ip:9182"

@@ -19,24 +19,21 @@ dependency "traefik" {
 }
 
 locals {
-  service_name                  = "prometheus"
-  docker_network_name           = "monitoring"
+  service_name        = "loki"
+  docker_network_name = "loki"
 }
 
-// This service internally exposes port 9090/tcp
+// This service internally exposes port 3100/tcp. You don't need to specify the port because traefik will do it for you.
+// Instead of using http://loki.docker.localhost:3100, you should use http://loki.docker.localhost.
+// To check if the service is running you can access the following URL: http://loki.docker.localhost/metrics.
+// You can also test for readiness with the following URL: http://loki.docker.localhost/ready.
 
 inputs = {
   docker_network_name       = "${local.docker_network_name}"
   docker_network_driver     = "bridge"
-  docker_image              = "prom/prometheus:latest"
+  docker_image              = "grafana/loki:latest"
   force_remove_docker_image = true
   service_name              = "${local.service_name}"
-  docker_volume = [
-    {
-      name   = "prometheus_data"
-      driver = "local"
-    }
-  ]
   labels = [
     {
       label = "traefik.http.routers.${local.service_name}.rule"
@@ -44,20 +41,14 @@ inputs = {
     },
     {
       label = "traefik.http.services.${local.service_name}.loadbalancer.server.port"
-      value = "9090"
+      value = "3100"
     }
   ]
   mounts = [
     {
-      source    = "/home/vagrant/projects/btougeiro/terragrunt-docker/prometheus/config"
-      target    = "/etc/prometheus"
+      source    = "/com.docker.devenvironments.code/projects/terragrunt-docker/grafana/loki/config"
+      target    = "/etc/loki"
       type      = "bind"
-      read_only = false
-    },
-    {
-      source    = "prometheus_data"
-      target    = "/prometheus"
-      type      = "volume"
       read_only = false
     }
   ]
@@ -72,10 +63,6 @@ inputs = {
   remove_container_after_destroy = true
 
   command = [
-    "--config.file=/etc/prometheus/prometheus.yaml",
-    "--storage.tsdb.path=/prometheus",
-    "--web.console.libraries=/etc/prometheus/console_libraries",
-    "--web.console.templates=/etc/prometheus/consoles",
-    "--web.enable-lifecycle"
+    "--config.file=/etc/loki/loki.yaml"
   ]
 }

@@ -9,7 +9,8 @@ terraform {
 dependencies {
   paths = [
     "${get_path_to_repo_root()}/traefik",
-    "${get_path_to_repo_root()}/prometheus"
+    "${get_path_to_repo_root()}/prometheus/prometheus",
+    "${get_path_to_repo_root()}/grafana/loki"
   ]
 }
 
@@ -22,7 +23,15 @@ dependency "traefik" {
 }
 
 dependency "prometheus" {
-  config_path = "${get_path_to_repo_root()}/prometheus"
+  config_path = "${get_path_to_repo_root()}/prometheus/prometheus"
+
+  mock_outputs = {
+    docker_network_id = "fake-network"
+  }
+}
+
+dependency "loki" {
+  config_path = "${get_path_to_repo_root()}/grafana/loki"
 
   mock_outputs = {
     docker_network_id = "fake-network"
@@ -41,11 +50,7 @@ inputs = {
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "grafana_provisioning_datasources"
-      driver = "local"
-    },
-    {
-      name   = "var_lib_grafana"
+      name   = "grafana-storage"
       driver = "local"
     }
   ]
@@ -61,13 +66,7 @@ inputs = {
   ]
   mounts = [
     {
-      source    = "grafana_provisioning_datasources"
-      target    = "/etc/grafana/provisioning/datasources"
-      type      = "volume"
-      read_only = false
-    },
-    {
-      source    = "var_lib_grafana"
+      source    = "grafana-storage"
       target    = "/var/lib/grafana"
       type      = "volume"
       read_only = false
@@ -79,6 +78,9 @@ inputs = {
     },
     {
       name = dependency.prometheus.outputs.docker_network_id
+    },
+    {
+      name = dependency.loki.outputs.docker_network_id
     }
   ]
   remove_container_after_destroy = true
