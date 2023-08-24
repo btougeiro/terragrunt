@@ -50,7 +50,7 @@ inputs = {
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "grafana-storage"
+      name   = "${local.service_name}-data"
       driver = "local"
     }
   ]
@@ -66,7 +66,7 @@ inputs = {
   ]
   mounts = [
     {
-      source    = "grafana-storage"
+      source    = "${local.service_name}-data"
       target    = "/var/lib/grafana"
       type      = "volume"
       read_only = false

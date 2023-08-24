@@ -21,6 +21,7 @@ dependency "traefik" {
 locals {
   service_name        = "prometheus"
   docker_network_name = "prometheus"
+  config_mount_source = "/opt/terragrunt-observability-docker/prometheus/prometheus/config"
 }
 
 // This service internally exposes port 9090/tcp
@@ -33,7 +34,7 @@ inputs = {
   service_name              = "${local.service_name}"
   docker_volume = [
     {
-      name   = "prometheus_data"
+      name   = "${local.service_name}-data"
       driver = "local"
     }
   ]
@@ -49,13 +50,13 @@ inputs = {
   ]
   mounts = [
     {
-      source    = "/com.docker.devenvironments.code/projects/terragrunt-docker/prometheus/prometheus/config"
+      source    = local.config_mount_source
       target    = "/etc/prometheus"
       type      = "bind"
       read_only = false
     },
     {
-      source    = "prometheus_data"
+      source    = "${local.service_name}-data"
       target    = "/prometheus"
       type      = "volume"
       read_only = false

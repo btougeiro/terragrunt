@@ -19,7 +19,8 @@ dependency "loki" {
 }
 
 locals {
-  service_name = "promtail"
+  service_name        = "promtail"
+  config_mount_source = "/opt/terragrunt-observability-docker/grafana/promtail/config"
 }
 
 inputs = {
@@ -34,7 +35,7 @@ inputs = {
       read_only = true
     },
     {
-      source    = "/com.docker.devenvironments.code/projects/terragrunt-docker/grafana/promtail/config"
+      source    = local.config_mount_source
       target    = "/etc/promtail"
       type      = "bind"
       read_only = false
@@ -42,7 +43,7 @@ inputs = {
   ]
   networks_advanced = [
     {
-      name = dependency.prometheus.outputs.docker_network_id
+      name = dependency.loki.outputs.docker_network_id
     }
   ]
   remove_container_after_destroy = true

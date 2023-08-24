@@ -21,12 +21,15 @@ dependency "traefik" {
 locals {
   service_name        = "loki"
   docker_network_name = "loki"
+  config_mount_source = "/opt/terragrunt-observability-docker/grafana/loki/config"
 }
 
-// This service internally exposes port 3100/tcp. You don't need to specify the port because traefik will do it for you.
-// Instead of using http://loki.docker.localhost:3100, you should use http://loki.docker.localhost.
-// To check if the service is running you can access the following URL: http://loki.docker.localhost/metrics.
-// You can also test for readiness with the following URL: http://loki.docker.localhost/ready.
+/*
+  This service internally exposes port 3100/tcp. You don't need to specify the port because traefik will do it for you.
+  Instead of using http://loki.docker.localhost:3100, you should use http://loki.docker.localhost.
+  To check if the service is running you can access the following URL: http://loki.docker.localhost/metrics.
+  You can also test for readiness with the following URL: http://loki.docker.localhost/ready.
+*/
 
 inputs = {
   docker_network_name       = "${local.docker_network_name}"
@@ -46,7 +49,7 @@ inputs = {
   ]
   mounts = [
     {
-      source    = "/com.docker.devenvironments.code/projects/terragrunt-docker/grafana/loki/config"
+      source    = local.config_mount_source
       target    = "/etc/loki"
       type      = "bind"
       read_only = false
