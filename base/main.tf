@@ -65,3 +65,30 @@ resource "docker_container" "this" {
 
   depends_on = [docker_image.this, docker_network.this, docker_volume.this]
 }
+
+/*
+  Grafana Loki officially supports a Docker plugin that will read logs from Docker containers and ship them to Loki.
+  The plugin can be configured to send the logs to a private Loki instance.
+*/
+
+
+/*
+resource "null_resource" "loki_driver_plugin" {
+  provisioner "local-exec" {
+    command = "docker plugin install grafana/loki-docker-driver:latest --alias loki --grant-all-permissions"
+  }
+}
+
+// To prevent rewrite your /etc/docker/daemon.json file, check this command before execution
+resource "null_resource" "loki_daemon_json" {
+  provisioner "local-exec" {
+    command = "echo {\"log-driver\": \"loki\", \"log-opts\": { \"loki-url\": \"http://localhost:3100/loki/api/v1/push\", \"loki-batch-size\": \"400\"}} > /etc/docker/daemon.json"
+  }
+}
+
+resource "null_resource" "restart_docker_engine" {
+  provisioner "local-exec" {
+    command = "systemctl restart docker"
+  }
+}
+*/
